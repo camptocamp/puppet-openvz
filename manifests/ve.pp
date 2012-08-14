@@ -108,7 +108,6 @@ define openvz::ve (
         exec {"vzctl set ${veid} --ipdel all --ipadd ${ip} --save":
           unless  => "test \$(vzlist -a -o ip -H ${veid}) == '${ip}'",
           require => Exec["vzctl create ${veid}"],
-          notify  => Exec["puppet client installation in ${veid}"],
         }
       }
 
@@ -129,14 +128,6 @@ define openvz::ve (
       exec {"resolvconf fix ${veid}":
         command => "source ${openvz_conf_file}; cp -f /etc/resolv.conf \$VE_PRIVATE/${veid}/etc/resolv.conf",
         refreshonly => true,
-      }
-     
-      # Puppet client
-      exec {"puppet client installation in ${veid}":
-        command => "(wget -O - http://sa.camptocamp.com/d-i/install-puppet.sh; echo '/usr/sbin/puppetd --ssldir /var/lib/puppet/ssl -t --server sa.camptocamp.com') | vzctl exec ${veid} sh",
-        refreshonly => true,
-        timeout => "-1",
-        require => [ Exec["hostname fix ${veid}"], Exec["resolvconf fix ${veid}"] ],
       }
         
     }
