@@ -1,5 +1,4 @@
-output = %x{vzlist -H -a -o veid,hostname,status 2>&1}
-
+output = %x{which vzlist 1> /dev/null && vzlist -H -a -o veid,hostname,status 2>&1}
 if $?.exitstatus
   Facter.add('veids') do
     setcode do
@@ -11,4 +10,3 @@ if $?.exitstatus
     end
   end
 end
-
