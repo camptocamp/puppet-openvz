@@ -1,15 +1,12 @@
-# returns veid and status as a fact.
-require 'facter'
-if File.exist?('/usr/sbin/vzlist')
-  Facter.add('VEIDs') do
-    ENV["PATH"]="/bin:/sbin:/usr/bin:/usr/sbin"
+output = %x{which vzlist 1> /dev/null && vzlist -H -a -o veid,hostname,status 2>&1}
+if $?.exitstatus
+  Facter.add('veids') do
     setcode do
       veid = []
-      output = %x{vzlist -H -a -o veid,status}
       output.each{|line|
-        veid.push(line.strip)
+        veid.push(line.split(' ').reject{ |e| e.empty? }.join(':'))
       }
-      veid.join(';')
+      veid.join(' ')
     end
   end
 end
