@@ -1,5 +1,6 @@
-output = %x{which vzlist 1> /dev/null && vzlist -H -a -o veid,hostname,status 2>&1}
-if $?.exitstatus
+output = %x{which vzlist 2>&1 > /dev/null}
+if $?.exitstatus == 0
+  output = %x{vzlist -H -a -o veid,hostname,status}
   Facter.add('veids') do
     setcode do
       veid = []
