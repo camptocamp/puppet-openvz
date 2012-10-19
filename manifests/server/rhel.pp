@@ -41,7 +41,7 @@ class openvz::server::rhel {
     "vzctl-lib.x86_64",
     "vzquota.x86_64"
     ]:
-    ensure  => latest,
+    ensure  => present,
     require => [Yumrepo["openvz-kernel-rhel5"], Yumrepo["openvz-utils"]],
   }
 }
