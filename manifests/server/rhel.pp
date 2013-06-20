@@ -15,33 +15,35 @@ class openvz::server::rhel {
     changes => "set SELINUX disabled",
   }
 
-  yumrepo {"openvz-kernel-rhel5":
-    descr => "OpenVZ RHEL5-based kernel",
-    mirrorlist => "http://download.openvz.org/kernel/mirrors-rhel5-2.6.18",
-    enabled => 1,
-    gpgkey => "http://download.openvz.org/RPM-GPG-Key-OpenVZ",
-    gpgcheck => 1,
+  exec {"get openvz repo":
+    command => "/usr/bin/curl -o /etc/yum.repos.d/openvz.repo http://ftp.openvz.org/openvz.repo",
+    creates => "/etc/yum.repos.d/openvz.repo",
   }
 
-  yumrepo {"openvz-utils":
-    descr => "OpenVZ utilities",
-    mirrorlist => "http://download.openvz.org/mirrors-current",
-    enabled => 1,
-    gpgkey => "http://download.openvz.org/RPM-GPG-Key-OpenVZ",
-    gpgcheck => 1,
+  exec {"get openvz key":
+    command => "/bin/rpm --import http://ftp.openvz.org/RPM-GPG-Key-OpenVZ",
+    unless => "/bin/rpm -qi gpg-pubkey-a7a1d4b6-43281558",
   }
+
+  augeas {"enable needed repo":
+    context => "/files/etc/yum.repos.d/openvz.repo/openvz-kernel-rhel$::lsbmajdistrelease/",
+    changes => "set enabled 1",
+    require => Exec["get openvz repo"],
+  }
+
+  augeas {"disable unneeded repos":
+    context => $openvz::params::others,
+    changes => "set enabled 0",
+    require => Exec["get openvz repo"],
+  }
+
 
   package {["vconfig.x86_64", "bridge-utils.x86_64"]:
     ensure => present,
   }
 
-  package{[
-    "ovzkernel.x86_64",
-    "vzctl.x86_64",
-    "vzctl-lib.x86_64",
-    "vzquota.x86_64"
-    ]:
+  package{ $openvz::params::package:
     ensure  => present,
-    require => [Yumrepo["openvz-kernel-rhel5"], Yumrepo["openvz-utils"]],
+    require => [Augeas["enable needed repo"], Augeas["disable unneeded repos"], Exec["get openvz key"]],
   }
 }
