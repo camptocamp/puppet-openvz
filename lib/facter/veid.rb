@@ -4,7 +4,7 @@ if $?.exitstatus == 0
   Facter.add('veids') do
     setcode do
       veid = []
-      output.each{|line|
+      output.split("\n").each{|line|
         veid.push(line.split(' ').reject{ |e| e.empty? }.join(':'))
       }
       veid.join(' ')
